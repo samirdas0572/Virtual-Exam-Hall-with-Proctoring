@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Manage Questions - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{ exam.title }} — Questions</h1>
+            <p>{{ exam.questions|length }} question(s) · {{ exam.total_marks }} total marks</p>
+        </div>
+
+        <!-- Add Question Form -->
+        <div class="glass-card" style="margin-bottom:2rem;">
+            <h2 class="section-title">Add New Question</h2>
+            <form method="POST" action="{{ url_for('add_question', exam_id=exam.id) }}">
+                <div class="form-group">
+                    <label class="form-label">Question Text</label>
+                    <textarea name="question_text" class="form-textarea" placeholder="Enter the question..." required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Question Type</label>
+                        <select name="question_type" class="form-select" id="questionType" onchange="toggleOptions()">
+                            <option value="mcq">Multiple Choice (MCQ)</option>
+                            <option value="short_answer">Short Answer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Marks</label>
+                        <input type="number" name="marks" class="form-input" min="1" value="1" required>
+                    </div>
+                </div>
+
+                <div id="mcqOptions">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Option A</label>
+                            <input type="text" name="option_a" class="form-input" placeholder="Option A">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Option B</label>
+                            <input type="text" name="option_b" class="form-input" placeholder="Option B">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Option C</label>
+                            <input type="text" name="option_c" class="form-input" placeholder="Option C">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Option D</label>
+                            <input type="text" name="option_d" class="form-input" placeholder="Option D">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Correct Answer <small style="color:var(--text-dim);">(For MCQ: enter A, B, C, or D)</small></label>
+                    <input type="text" name="correct_answer" class="form-input" placeholder="Correct answer" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add Question</button>
+            </form>
+        </div>
+
+        <!-- Existing Questions -->
+        {% if exam.questions %}
+        <h2 class="section-title">Existing Questions ({{ exam.questions|length }})</h2>
+        {% for q in exam.questions %}
+        <div class="glass-card" style="margin-bottom:1rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div style="flex:1;">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;">
+                        <span class="badge badge-purple">Q{{ loop.index }}</span>
+                        <span class="badge {{ 'badge-info' if q.question_type == 'mcq' else 'badge-warning' }}">{{ q.question_type|upper }}</span>
+                        <span class="badge badge-success">{{ q.marks }} mark{{ 's' if q.marks > 1 }}</span>
+                    </div>
+                    <p style="font-weight:500;margin-bottom:.75rem;">{{ q.question_text }}</p>
+                    {% if q.question_type == 'mcq' %}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.85rem;color:var(--text-muted);">
+                        {% if q.option_a %}<div>A) {{ q.option_a }}</div>{% endif %}
+                        {% if q.option_b %}<div>B) {{ q.option_b }}</div>{% endif %}
+                        {% if q.option_c %}<div>C) {{ q.option_c }}</div>{% endif %}
+                        {% if q.option_d %}<div>D) {{ q.option_d }}</div>{% endif %}
+                    </div>
+                    {% endif %}
+                    <p style="margin-top:.5rem;font-size:.85rem;color:var(--success);">✓ Answer: {{ q.correct_answer }}</p>
+                </div>
+                <form method="POST" action="{{ url_for('delete_question', question_id=q.id) }}" onsubmit="return confirmAction('Delete this question?')">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="glass-card empty-state">
+            <div class="icon">❓</div>
+            <h3>No Questions Added</h3>
+            <p>Add questions using the form above</p>
+        </div>
+        {% endif %}
+
+        <div style="margin-top:1.5rem;">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleOptions() {
+    const type = document.getElementById('questionType').value;
+    document.getElementById('mcqOptions').style.display = type === 'mcq' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

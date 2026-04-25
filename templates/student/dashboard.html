@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard - Virtual Exam Hall{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="container">
+        <div class="page-header">
+            <h1>Welcome, {{ current_user.full_name }}</h1>
+            <p>Browse available exams and track your results</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card purple">
+                <div class="stat-icon purple">📝</div>
+                <div class="stat-value">{{ available_exams|length }}</div>
+                <div class="stat-label">Available Exams</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon green">✅</div>
+                <div class="stat-value">{{ completed }}</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card cyan">
+                <div class="stat-icon cyan">📊</div>
+                <div class="stat-value">{{ "%.0f"|format(avg_score) }}%</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Available Exams</h2>
+
+        {% if available_exams %}
+        <div class="exam-grid">
+            {% for exam in available_exams %}
+            <div class="exam-card">
+                <div class="exam-card-header">
+                    <h3>{{ exam.title }}</h3>
+                    {% if exam.proctoring_enabled %}
+                        <span class="badge badge-purple">🔒 Proctored</span>
+                    {% endif %}
+                </div>
+                <p>{{ exam.description or 'No description provided' }}</p>
+                <div class="exam-meta">
+                    <span class="exam-meta-item">📚 {{ exam.subject }}</span>
+                    <span class="exam-meta-item">⏱ {{ exam.duration_minutes }} min</span>
+                    <span class="exam-meta-item">📝 {{ exam.questions|length }} questions</span>
+                    <span class="exam-meta-item">🏆 {{ exam.total_marks }} marks</span>
+                </div>
+
+                {% set attempted = exam.id in attempted_exam_ids %}
+                {% if attempted %}
+                    <span class="badge badge-success" style="margin-right:.5rem;">✓ Completed</span>
+                    <a href="{{ url_for('student_results') }}" class="btn btn-secondary btn-sm">View Result</a>
+                {% else %}
+                    {% if exam.questions|length > 0 %}
+                        <a href="{{ url_for('start_exam', exam_id=exam.id) }}" class="btn btn-primary">Start Exam →</a>
+                    {% else %}
+                        <span class="badge badge-warning">No questions added yet</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="glass-card empty-state">
+            <div class="icon">📋</div>
+            <h3>No Exams Available</h3>
+            <p>Check back later for new exams</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}My Results - Virtual Exam Hall{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="container">
+        <div class="page-header">
+            <h1>My Results</h1>
+            <p>View your exam history and scores</p>
+        </div>
+
+        {% if attempts %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Exam</th>
+                        <th>Subject</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Result</th>
+                        <th>Violations</th>
+                        <th>Date</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in attempts %}
+                    <tr>
+                        <td><strong>{{ a.exam.title }}</strong></td>
+                        <td>{{ a.exam.subject }}</td>
+                        <td>{{ a.score }} / {{ a.total_marks }}</td>
+                        <td>{{ "%.1f"|format(a.percentage) }}%</td>
+                        <td>
+                            {% if a.status == 'completed' %}
+                                {% if a.percentage >= a.exam.passing_percentage %}
+                                    <span class="badge badge-success">Passed</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Failed</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-warning">{{ a.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {{ 'badge-danger' if a.violation_count > 3 else 'badge-warning' if a.violation_count > 0 else 'badge-success' }}">
+                                {{ a.violation_count }}
+                            </span>
+                        </td>
+                        <td style="font-size:.85rem;color:var(--text-muted);">
+                            {{ a.end_time.strftime('%d %b %Y') if a.end_time else 'N/A' }}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('student_result_detail', attempt_id=a.id) }}" class="btn btn-secondary btn-sm">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="glass-card empty-state">
+            <div class="icon">📊</div>
+            <h3>No Results Yet</h3>
+            <p>Take an exam to see your results here</p>
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary" style="margin-top:1rem;">Browse Exams</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

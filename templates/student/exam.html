@@ -1,0 +1,101 @@
+{% set hide_navbar = true %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ exam.title }} - Exam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="exam-wrapper">
+        <!-- Top Bar -->
+        <div class="exam-topbar">
+            <div style="display:flex;align-items:center;gap:1.5rem;">
+                <span style="font-weight:700;font-size:1.1rem;color:var(--text);">{{ exam.title }}</span>
+                <span id="proctorStatus" class="status-badge status-active">Proctoring Active</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:1.5rem;">
+                <div style="text-align:center;">
+                    <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Time Left</div>
+                    <div id="examTimer" class="timer">--:--</div>
+                </div>
+                <button onclick="submitExam()" class="btn btn-danger btn-sm">Submit Exam</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="exam-sidebar">
+            <!-- Webcam -->
+            <div>
+                <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;">
+                    Webcam
+                    <span id="webcamStatus" class="status-badge status-active" style="font-size:.65rem;">Camera Active</span>
+                </div>
+                <div class="webcam-container">
+                    <video id="webcamPreview" autoplay muted playsinline></video>
+                    <div class="webcam-overlay">
+                        <span class="dot"></span> Recording
+                    </div>
+                </div>
+            </div>
+
+            <!-- Violations -->
+            <div>
+                <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:.5rem;">
+                    Violations: <span id="violationCount" style="color:var(--danger);">0</span> / {{ exam.max_violations }}
+                </div>
+                <div class="violation-bar">
+                    <div class="violation-bar-fill" id="violationBar" style="width:0%;"></div>
+                </div>
+            </div>
+
+            <!-- Question Navigation -->
+            <div>
+                <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:.5rem;">Questions</div>
+                <div class="question-nav-grid" id="questionNav"></div>
+            </div>
+
+            <!-- Legend -->
+            <div style="font-size:.75rem;color:var(--text-dim);margin-top:auto;">
+                <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem;">
+                    <span style="width:12px;height:12px;border-radius:4px;background:rgba(124,58,237,.15);border:1px solid var(--primary);display:inline-block;"></span> Current
+                </div>
+                <div style="display:flex;align-items:center;gap:.4rem;">
+                    <span style="width:12px;height:12px;border-radius:4px;background:rgba(16,185,129,.15);border:1px solid var(--success);display:inline-block;"></span> Answered
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Question Area -->
+        <div class="exam-main">
+            <div class="question-card">
+                <div class="question-header">
+                    <span id="questionNumber" style="font-weight:600;color:var(--text-muted);">Question 1 of {{ questions|length }}</span>
+                    <span id="questionMarks" class="badge badge-purple">1 mark</span>
+                </div>
+                <div id="questionText" class="question-text"></div>
+                <div id="questionOptions"></div>
+                <div class="question-actions">
+                    <button id="prevBtn" onclick="prevQuestion()" class="btn btn-secondary">← Previous</button>
+                    <button id="nextBtn" onclick="nextQuestion()" class="btn btn-primary">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/proctor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/exam.js') }}"></script>
+    <script>
+        const examData = {
+            attempt_id: {{ attempt.id }},
+            duration: {{ exam.duration_minutes }},
+            proctoring_enabled: {{ 'true' if exam.proctoring_enabled else 'false' }},
+            max_violations: {{ exam.max_violations }},
+            questions: {{ questions_json|safe }}
+        };
+        document.addEventListener('DOMContentLoaded', () => initExam(examData));
+    </script>
+</body>
+</html>

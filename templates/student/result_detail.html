@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Result Detail - Virtual Exam Hall{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="container" style="max-width:800px;">
+        <!-- Result Hero -->
+        <div class="result-hero">
+            <div style="font-size:.9rem;color:var(--text-muted);margin-bottom:.5rem;">{{ attempt.exam.title }}</div>
+            <div class="result-score">{{ "%.1f"|format(attempt.percentage) }}%</div>
+            {% if attempt.percentage >= attempt.exam.passing_percentage %}
+                <div class="result-status passed">✓ Passed</div>
+            {% else %}
+                <div class="result-status failed">✕ Failed</div>
+            {% endif %}
+
+            <div class="result-details">
+                <div class="result-detail-item">
+                    <div class="value">{{ attempt.score }}</div>
+                    <div class="label">Score</div>
+                </div>
+                <div class="result-detail-item">
+                    <div class="value">{{ attempt.total_marks }}</div>
+                    <div class="label">Total Marks</div>
+                </div>
+                <div class="result-detail-item">
+                    <div class="value">{{ attempt.violation_count }}</div>
+                    <div class="label">Violations</div>
+                </div>
+                <div class="result-detail-item">
+                    <div class="value">
+                        {% if attempt.is_flagged %}
+                            <span style="color:var(--danger);">Flagged</span>
+                        {% else %}
+                            <span style="color:var(--success);">Clean</span>
+                        {% endif %}
+                    </div>
+                    <div class="label">Integrity</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Answer Review -->
+        <h2 class="section-title">Answer Review</h2>
+        {% for answer in attempt.answers %}
+        {% set q = answer.question %}
+        <div class="glass-card" style="margin-bottom:1rem;border-left:3px solid {{ 'var(--success)' if answer.is_correct else 'var(--danger)' }};">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+                <span class="badge badge-purple">Q{{ loop.index }}</span>
+                <span class="badge {{ 'badge-success' if answer.is_correct else 'badge-danger' }}">
+                    {{ '✓ Correct' if answer.is_correct else '✕ Wrong' }} · {{ q.marks }} mark{{ 's' if q.marks > 1 }}
+                </span>
+            </div>
+            <p style="font-weight:500;margin-bottom:.75rem;">{{ q.question_text }}</p>
+
+            {% if q.question_type == 'mcq' %}
+            <div style="font-size:.85rem;color:var(--text-muted);display:grid;gap:.3rem;">
+                {% for opt in ['a','b','c','d'] %}
+                {% set val = q['option_' + opt] %}
+                {% if val %}
+                <div style="padding:.4rem .6rem;border-radius:6px;
+                    {% if opt|upper == q.correct_answer %}background:rgba(16,185,129,.1);color:var(--success);
+                    {% elif opt|upper == answer.student_answer and not answer.is_correct %}background:rgba(239,68,68,.1);color:var(--danger);
+                    {% endif %}">
+                    {{ opt|upper }}) {{ val }}
+                    {% if opt|upper == q.correct_answer %} ✓{% endif %}
+                    {% if opt|upper == answer.student_answer and opt|upper != q.correct_answer %} (Your answer){% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="font-size:.85rem;">
+                <p style="color:var(--text-muted);">Your answer: <span style="color:var(--text);">{{ answer.student_answer or 'Not answered' }}</span></p>
+                <p style="color:var(--success);margin-top:.3rem;">Correct answer: {{ q.correct_answer }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Violations Log -->
+        {% if attempt.violations %}
+        <h2 class="section-title" style="margin-top:2rem;">Violation Log</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>#</th><th>Type</th><th>Details</th><th>Time</th></tr></thead>
+                <tbody>
+                    {% for v in attempt.violations %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><span class="badge badge-danger">{{ v.violation_type }}</span></td>
+                        <td>{{ v.details }}</td>
+                        <td style="font-size:.8rem;color:var(--text-muted);">{{ v.timestamp.strftime('%H:%M:%S') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div style="margin-top:2rem;display:flex;gap:1rem;">
+            <a href="{{ url_for('student_results') }}" class="btn btn-secondary">← All Results</a>
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary">Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

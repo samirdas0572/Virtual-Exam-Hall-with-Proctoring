@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - Virtual Exam Hall{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="container">
+        <div class="page-header">
+            <h1>Admin Dashboard</h1>
+            <p>Manage exams, monitor students, and review results</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card purple">
+                <div class="stat-icon purple">📝</div>
+                <div class="stat-value">{{ stats.total_exams }}</div>
+                <div class="stat-label">Total Exams</div>
+            </div>
+            <div class="stat-card cyan">
+                <div class="stat-icon cyan">👥</div>
+                <div class="stat-value">{{ stats.total_students }}</div>
+                <div class="stat-label">Students</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon green">✅</div>
+                <div class="stat-value">{{ stats.total_attempts }}</div>
+                <div class="stat-label">Exam Attempts</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-icon red">⚠️</div>
+                <div class="stat-value">{{ stats.flagged_attempts }}</div>
+                <div class="stat-label">Flagged Attempts</div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h2 class="section-title" style="margin-bottom:0;">Your Exams</h2>
+            <a href="{{ url_for('create_exam') }}" class="btn btn-primary">+ Create Exam</a>
+        </div>
+
+        {% if exams %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Exam Title</th>
+                        <th>Subject</th>
+                        <th>Duration</th>
+                        <th>Questions</th>
+                        <th>Attempts</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams %}
+                    <tr>
+                        <td><strong>{{ exam.title }}</strong></td>
+                        <td>{{ exam.subject }}</td>
+                        <td>{{ exam.duration_minutes }} min</td>
+                        <td>{{ exam.questions|length }}</td>
+                        <td>{{ exam.attempts|length }}</td>
+                        <td>
+                            {% if exam.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                            <a href="{{ url_for('manage_questions', exam_id=exam.id) }}" class="btn btn-secondary btn-sm">Questions</a>
+                            <a href="{{ url_for('exam_results', exam_id=exam.id) }}" class="btn btn-secondary btn-sm">Results</a>
+                            <form method="POST" action="{{ url_for('toggle_exam', exam_id=exam.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm {{ 'btn-danger' if exam.is_active else 'btn-success' }}">
+                                    {{ 'Deactivate' if exam.is_active else 'Activate' }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('delete_exam', exam_id=exam.id) }}" style="display:inline;"
+                                  onsubmit="return confirmAction('Delete this exam and all its data?')">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="glass-card empty-state">
+            <div class="icon">📋</div>
+            <h3>No Exams Yet</h3>
+            <p>Create your first exam to get started</p>
+            <a href="{{ url_for('create_exam') }}" class="btn btn-primary" style="margin-top:1rem;">Create Exam</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
